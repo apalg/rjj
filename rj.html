@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Grade Galaxy</title>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI';}
+
+body{
+background:radial-gradient(circle at top,#1b1f3a,#0d1025 70%);
+display:flex;
+justify-content:center;
+padding:20px;
+color:white;
+}
+
+.container{
+width:100%;
+max-width:1100px;
+background:linear-gradient(145deg,#2c2f4a,#23263d);
+border-radius:25px;
+padding:25px;
+box-shadow:0 0 25px rgba(0,0,0,0.6);
+margin-bottom:80px;
+}
+
+.header-box{
+text-align:center;
+background:rgba(255,255,255,0.05);
+padding:15px;
+border-radius:18px;
+margin-bottom:20px;
+}
+
+.controls{
+display:flex;
+justify-content:center;
+gap:10px;
+margin-bottom:15px;
+flex-wrap:wrap;
+}
+
+.search{
+width:320px;
+padding:10px;
+border-radius:10px;
+border:none;
+}
+
+button{
+padding:8px 12px;
+border:none;
+border-radius:8px;
+background:#7f00ff;
+color:white;
+cursor:pointer;
+}
+
+button:hover{box-shadow:0 0 10px #e100ff;}
+
+.table-wrapper{overflow-x:auto;}
+@media(max-width:768px){table{min-width:1000px;}}
+
+table{width:100%;border-spacing:10px;}
+
+th{
+background:linear-gradient(90deg,#7f00ff,#e100ff);
+padding:8px;
+border-radius:10px;
+}
+
+td{
+background:#7f00ff;
+padding:8px;
+border-radius:10px;
+text-align:center;
+}
+
+input{
+width:55px;
+padding:5px;
+border-radius:6px;
+border:none;
+text-align:center;
+}
+
+.name{width:120px;}
+
+.row-box{
+display:flex;
+gap:5px;
+overflow-x:auto;
+max-width:180px;
+}
+
+/* 📊 AVERAGE PANEL */
+.average-panel{
+margin-top:20px;
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(120px,1fr));
+gap:10px;
+}
+
+.avg-box{
+background:rgba(255,255,255,0.08);
+padding:12px;
+border-radius:12px;
+text-align:center;
+}
+
+.avg-box h4{
+font-size:12px;
+opacity:0.8;
+}
+
+.avg-box span{
+font-size:18px;
+font-weight:bold;
+}
+
+/* footer */
+.footer{
+position:fixed;
+bottom:0;
+left:0;
+width:100%;
+background:#020617;
+color:#d1d5db;
+text-align:center;
+padding:10px;
+font-weight:bold;
+}
+
+/* ============================= */
+/* ADDED DATABASE RECORD DESIGN */
+/* ============================= */
+.records-box{
+margin-top:25px;
+background:rgba(255,255,255,0.08);
+padding:15px;
+border-radius:15px;
+}
+
+.record-card{
+background:rgba(255,255,255,0.1);
+padding:12px;
+border-radius:12px;
+margin-top:10px;
+border:1px solid rgba(255,255,255,0.2);
+text-align:center;
+}
+
+.record-card h3{
+margin:5px 0;
+}
+
+.delete-db{
+background:red;
+color:white;
+padding:6px 12px;
+border-radius:8px;
+cursor:pointer;
+margin-top:10px;
+border:none;
+}
+
+.save-db{
+background:#00c853;
+color:white;
+padding:8px 12px;
+border-radius:8px;
+cursor:pointer;
+border:none;
+}
+
+.save-db:hover{
+box-shadow:0 0 10px #00ff88;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="header-box">
+<h2>🚀 Grade Galaxy</h2>
+<p>Student Weighted Grade Calculator</p>
+</div>
+
+<div class="controls">
+<input type="text" id="searchInput" class="search" placeholder="🔍 Search..." oninput="applySearch()">
+<button onclick="addRow()">➕ Add Student</button>
+<button class="save-db" onclick="saveAllToFirebase()">💾 Compute and Save</button>
+</div>
+
+<div class="table-wrapper">
+<table>
+
+<thead>
+<tr>
+<th>Rank</th>
+<th>Name</th>
+
+<th>Quiz<br>
+<button onclick="addColumn('quiz')">+</button>
+<button onclick="removeColumn('quiz')">-</button>
+</th>
+
+<th>Laboratory<br>
+<button onclick="addColumn('lab')">+</button>
+<button onclick="removeColumn('lab')">-</button>
+</th>
+
+<th>Assignment<br>
+<button onclick="addColumn('assign')">+</button>
+<button onclick="removeColumn('assign')">-</button>
+</th>
+
+<th>Attendance<br>
+<button onclick="addColumn('attend')">+</button>
+<button onclick="removeColumn('attend')">-</button>
+</th>
+
+<th>Exam<br>
+<button onclick="addColumn('exam')">+</button>
+<button onclick="removeColumn('exam')">-</button>
+</th>
+
+<th>Final</th>
+<th>X</th>
+</tr>
+</thead>
+
+<tbody id="body">
+
+<tr class="over-row">
+<td>-</td>
+<td>Base</td>
+<td><input id="qOver" value="100" oninput="compute()"></td>
+<td><input id="lOver" value="100" oninput="compute()"></td>
+<td><input id="aOver" value="100" oninput="compute()"></td>
+<td><input id="atOver" value="100" oninput="compute()"></td>
+<td><input id="eOver" value="100" oninput="compute()"></td>
+<td>-</td>
+<td>-</td>
+</tr>
+
+</tbody>
+</table>
+</div>
+
+<!-- 📊 AVERAGE -->
+<div class="average-panel">
+<div class="avg-box"><h4>Quiz</h4><span id="avgQuiz">0</span></div>
+<div class="avg-box"><h4>Lab</h4><span id="avgLab">0</span></div>
+<div class="avg-box"><h4>Assign</h4><span id="avgAssign">0</span></div>
+<div class="avg-box"><h4>Attend</h4><span id="avgAttend">0</span></div>
+<div class="avg-box"><h4>Exam</h4><span id="avgExam">0</span></div>
+</div>
+
+<!-- DATABASE RECORDS -->
+<div class="records-box">
+<h3 style="text-align:center;">📌 Online Student Records</h3>
+<div id="recordsContainer"></div>
+</div>
+
+</div>
+
+<div class="footer">
+RJ BEBOSO BSIT 3 - A
+</div>
+
+<script>
+
+let structure={quiz:1,lab:1,assign:1,attend:1,exam:1};
+
+function input(){
+return `<input oninput="limit(this);compute()">`;
+}
+
+function limit(i){
+i.value=i.value.replace(/\D/g,'');
+if(+i.value>100) i.value=100;
+}
+
+function create(type){
+let html=`<div class="row-box">`;
+for(let i=0;i<structure[type];i++){
+html+=input();
+}
+html+=`</div>`;
+return html;
+}
+
+function addRow(){
+let row=document.createElement("tr");
+
+row.innerHTML=`
+<td class="rank">-</td>
+<td><input class="name" oninput="applySearch();compute()"></td>
+<td class="quiz">${create('quiz')}</td>
+<td class="lab">${create('lab')}</td>
+<td class="assign">${create('assign')}</td>
+<td class="attend">${create('attend')}</td>
+<td class="exam">${create('exam')}</td>
+<td class="result">0</td>
+<td><button onclick="this.closest('tr').remove();compute()">❌</button></td>
+`;
+
+body.appendChild(row);
+}
+
+function addColumn(type){
+structure[type]++;
+document.querySelectorAll("."+type+" .row-box").forEach(div=>{
+div.insertAdjacentHTML("beforeend",input());
+});
+}
+
+function removeColumn(type){
+if(structure[type]<=1) return;
+structure[type]--;
+document.querySelectorAll("."+type+" .row-box").forEach(div=>{
+div.lastElementChild.remove();
+});
+}
+
+function isComplete(row){
+let inputs=row.querySelectorAll("input");
+for(let i of inputs){
+if(i.value==="") return false;
+}
+return true;
+}
+
+function computeCat(cell,over){
+let inputs=cell.querySelectorAll("input");
+let sum=0;
+inputs.forEach(i=> sum+=+i.value||0);
+let max=over*inputs.length;
+return max ? sum/max : 0;
+}
+
+function compute(){
+
+let rows=[...document.querySelectorAll("#body tr")]
+.filter(r=>!r.classList.contains("over-row"));
+
+let valid=[];
+let totals={quiz:0,lab:0,assign:0,attend:0,exam:0,count:0};
+
+rows.forEach(r=>{
+
+let quiz=computeCat(r.querySelector(".quiz"),+qOver.value)*100;
+let lab=computeCat(r.querySelector(".lab"),+lOver.value)*100;
+let assign=computeCat(r.querySelector(".assign"),+aOver.value)*100;
+let attend=computeCat(r.querySelector(".attend"),+atOver.value)*100;
+let exam=computeCat(r.querySelector(".exam"),+eOver.value)*100;
+
+let final=(quiz*0.2+lab*0.3+assign*0.1+attend*0.1+exam*0.3).toFixed(2);
+
+r.querySelector(".result").innerText=final;
+
+if(isComplete(r)){
+valid.push({row:r,score:+final});
+
+totals.quiz+=quiz;
+totals.lab+=lab;
+totals.assign+=assign;
+totals.attend+=attend;
+totals.exam+=exam;
+totals.count++;
+}else{
+r.querySelector(".rank").innerText="-";
+}
+
+});
+
+/* averages */
+if(totals.count){
+avgQuiz.innerText=(totals.quiz/totals.count).toFixed(1);
+avgLab.innerText=(totals.lab/totals.count).toFixed(1);
+avgAssign.innerText=(totals.assign/totals.count).toFixed(1);
+avgAttend.innerText=(totals.attend/totals.count).toFixed(1);
+avgExam.innerText=(totals.exam/totals.count).toFixed(1);
+}else{
+avgQuiz.innerText="0";
+avgLab.innerText="0";
+avgAssign.innerText="0";
+avgAttend.innerText="0";
+avgExam.innerText="0";
+}
+
+/* ranking */
+valid.sort((a,b)=>b.score-a.score);
+valid.forEach((v,i)=>{
+v.row.querySelector(".rank").innerText=i+1;
+});
+
+}
+
+function applySearch(){
+let val=document.getElementById("searchInput").value.toLowerCase();
+
+document.querySelectorAll("#body tr").forEach(r=>{
+if(r.classList.contains("over-row")) return;
+
+let name=r.querySelector(".name").value.toLowerCase();
+r.style.display = name.includes(val) ? "" : "none";
+});
+
+compute();
+}
+
+</script>
+
+<!-- =============================== -->
+<!-- FIREBASE ONLINE DATABASE SCRIPT -->
+<!-- =============================== -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+import { getDatabase, ref, push, set, onValue, remove } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+
+const firebaseConfig = {
+    apiKey: "AIzaSyBTiJcl5EQVQXAzv_rC7O_9JxaCFC495F8",
+    authDomain: "grading-system-94ed7.firebaseapp.com",
+    databaseURL: "https://grading-system-94ed7-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "grading-system-94ed7",
+    storageBucket: "grading-system-94ed7.appspot.com",
+    messagingSenderId: "999652412217",
+    appId: "1:999652412217:web:88d04f6a0d34e640b876e8"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+const recordsContainer = document.getElementById("recordsContainer");
+
+/* SAVE ALL STUDENTS (BLOCK SAVE IF INCOMPLETE) */
+window.saveAllToFirebase = async function(){
+
+    compute(); // compute muna bago save
+
+    const rows = document.querySelectorAll("#body tr:not(.over-row)");
+
+    // CHECK IF MAY KULANG NA INPUT
+    for(let row of rows){
+
+        const name = row.querySelector(".name").value.trim() || "Unknown";
+        const inputs = row.querySelectorAll("input");
+
+        for(let i of inputs){
+            if(i.value.trim() === ""){
+                alert("❌ Cannot save! Incomplete grades found.\nStudent: " + name);
+                return;
+            }
+        }
+    }
+
+    const studentsRef = ref(db, "students");
+
+    // DELETE OLD RECORDS FIRST (NO DUPLICATES)
+    await remove(studentsRef);
+
+    rows.forEach(row=>{
+        const name = row.querySelector(".name").value.trim() || "Unknown";
+
+        function getValues(type){
+            return [...row.querySelectorAll("." + type + " input")].map(i => i.value || 0);
+        }
+
+        const studentData = {
+            name: name,
+            quiz: getValues("quiz"),
+            lab: getValues("lab"),
+            assignment: getValues("assign"),
+            attendance: getValues("attend"),
+            exam: getValues("exam"),
+            final: row.querySelector(".result").innerText,
+            timestamp: Date.now()
+        };
+
+        const studentRef = push(ref(db, "students"));
+        set(studentRef, studentData);
+    });
+
+    alert("✅ Database updated successfully!");
+}
+
+/* DELETE STUDENT RECORD */
+window.deleteStudent = function(studentKey){
+    if(confirm("Are you sure you want to delete this record?")){
+        remove(ref(db, "students/" + studentKey));
+    }
+}
+
+/* DISPLAY STUDENT RECORDS */
+onValue(ref(db, "students"), (snapshot)=>{
+    recordsContainer.innerHTML = "";
+
+    if(!snapshot.exists()){
+        recordsContainer.innerHTML = "<p style='text-align:center;'>No student records found.</p>";
+        return;
+    }
+
+    const allData = snapshot.val();
+
+    Object.entries(allData).forEach(([key, student])=>{
+        const card = document.createElement("div");
+        card.classList.add("record-card");
+
+        card.innerHTML = `
+            <h3>${student.name}</h3>
+            <p><b>Final Grade:</b> ${student.final}</p>
+            <button class="delete-db" onclick="deleteStudent('${key}')">Delete</button>
+        `;
+
+        recordsContainer.appendChild(card);
+    });
+});
+</script>
+
+</body>
+</html>
